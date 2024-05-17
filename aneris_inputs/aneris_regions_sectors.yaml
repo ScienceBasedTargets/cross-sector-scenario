@@ -1,0 +1,8 @@
+config:
+    harmonize_year: 2022
+    default_offset_method: 'reduce_offset_2050'
+    default_ratio_method: 'reduce_ratio_2050'
+    global_harmonization_only: false
+prefix: p
+suffix: s
+add_5regions: false

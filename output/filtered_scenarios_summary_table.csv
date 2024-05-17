@@ -1,0 +1,23 @@
+Model,Scenario,Literature Reference (if applicable)
+C-ROADS-5.005,Ratchet-1.5-noCDR,https://doi.org/10.1088/1748-9326/aac0c1
+C-ROADS-5.005,Ratchet-1.5-noCDR-noOS,https://doi.org/10.1088/1748-9326/aac0c1
+MESSAGEix-GLOBIOM 1.0,LowEnergyDemand_1.3_IPCC,https://doi.org/10.1038/s41560-018-0172-6
+MESSAGEix-GLOBIOM_1.1,EN_NPi2020_500,https://doi.org/10.1038/s41558-021-01215-2; https://doi.org/10.1088/1748-9326/ac09ae; https://doi.org/10.1038/s41893-021-00772-w
+MESSAGEix-GLOBIOM_1.1,NGFS2_Net-Zero 2050,"NGFS Climate Scenarios for central banks and supervisors, NGFS June 2021. https://www.ngfs.net/sites/default/files/media/2021/08/27/ngfs_climate_scenarios_phase2_june2021.pdf"
+MESSAGEix-GLOBIOM_1.1,EN_NPi2020_600_COV,https://doi.org/10.1038/s41558-021-01215-2; https://doi.org/10.1088/1748-9326/ac09ae; https://doi.org/10.1038/s41893-021-00772-w
+MESSAGEix-GLOBIOM_1.1,EN_NPi2020_600_DR4p,https://doi.org/10.1038/s41558-021-01215-2; https://doi.org/10.1088/1748-9326/ac09ae; https://doi.org/10.1038/s41893-021-00772-w
+MESSAGEix-GLOBIOM_1.1,EN_NPi2020_600_DR3p,https://doi.org/10.1038/s41558-021-01215-2; https://doi.org/10.1088/1748-9326/ac09ae; https://doi.org/10.1038/s41893-021-00772-w
+MESSAGEix-GLOBIOM_1.1,EN_NPi2020_600_DR2p,https://doi.org/10.1038/s41558-021-01215-2; https://doi.org/10.1088/1748-9326/ac09ae; https://doi.org/10.1038/s41893-021-00772-w
+MESSAGEix-GLOBIOM_1.1,EN_NPi2020_600_DR1p,https://doi.org/10.1038/s41558-021-01215-2; https://doi.org/10.1088/1748-9326/ac09ae; https://doi.org/10.1038/s41893-021-00772-w
+MESSAGEix-GLOBIOM_1.2,COV_GreenPush_550,https://doi.org/10.1038/s41560-021-00904-8
+MESSAGEix-GLOBIOM_1.2,COV_NoPolicyNoCOVID_550,https://doi.org/10.1038/s41560-021-00904-8
+MESSAGEix-GLOBIOM_1.2,COV_Restore_550,https://doi.org/10.1038/s41560-021-00904-8
+MESSAGEix-GLOBIOM_1.2,COV_SelfReliance_550,https://doi.org/10.1038/s41560-021-00904-8
+MESSAGEix-GLOBIOM_1.2,COV_SmartUse_550,https://doi.org/10.1038/s41560-021-00904-8
+REMIND 2.1,LeastTotalCost_LTC_brkLR15_SSP1_P50,https://doi.org/10.1088/1748-9326/ac27ce
+REMIND-MAgPIE 2.1-4.2,EN_NPi2020_400f,https://doi.org/10.1038/s41558-021-01215-2; https://doi.org/10.1088/1748-9326/ac09ae; https://doi.org/10.1038/s41893-021-00772-w
+REMIND-MAgPIE 2.1-4.2,EN_NPi2020_600f_COV,https://doi.org/10.1038/s41558-021-01215-2; https://doi.org/10.1088/1748-9326/ac09ae; https://doi.org/10.1038/s41893-021-00772-w
+REMIND-MAgPIE 2.1-4.2,NGFS2_Divergent Net Zero Policies,"NGFS Climate Scenarios for central banks and supervisors, NGFS June 2021. https://www.ngfs.net/sites/default/files/media/2021/08/27/ngfs_climate_scenarios_phase2_june2021.pdf"
+REMIND-MAgPIE 2.1-4.2,SusDev_SDP-PkBudg1000,https://doi.org/10.1038/s41558-021-01098-3
+WITCH 5.0,EN_NPi2020_500f,https://doi.org/10.1038/s41558-021-01215-2; https://doi.org/10.1088/1748-9326/ac09ae; https://doi.org/10.1038/s41893-021-00772-w
+WITCH-GLOBIOM 4.4,CD-LINKS_NPi2020_1000,https://doi.org/10.1038/s41560-018-0179-z; https://doi.org/10.1038/s41467-020-15414-6
