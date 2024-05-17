@@ -115,7 +115,18 @@ def sustainability_filters(scen_id_list, emissions_df):
 
     rem_afolu = flag_filter(emissions_df)
 
-    rem_ids = rem_biom.union(rem_lu).union(rem_ccs).union(rem_afolu)
+    # filter scenarios with >2.3 Mt CDR in 2020
+    ccs_var_list = [
+        'Carbon Sequestration|CCS|Biomass',
+        'Carbon Sequestration|Direct Air Capture',
+        'Carbon Sequestration|Enhanced Weathering']
+    cdr_df = emissions_df.loc[emissions_df['Variable'].isin(ccs_var_list)]
+    cdr_sum_df = cdr_df.groupby('scen_id').sum()
+    cdr_sum_df.reset_index(inplace=True)
+    rem_cdr = set(cdr_sum_df.loc[cdr_sum_df['2020'] > _2020_CDR]['scen_id'])
+
+    rem_ids = rem_biom.union(rem_lu).union(rem_ccs).union(rem_afolu).union(
+            rem_cdr)
 
     filtered_ids = set(scen_id_list).difference(rem_ids)
     return filtered_ids
@@ -380,7 +391,7 @@ def summarize_CO2():
     ar6_key, ar6_scen = read_ar6_data()
     year_col = [col for col in ar6_scen if col.startswith('2')]
     c1_scen = ar6_key.loc[ar6_key['Category'] == 'C1']['scen_id']
-    c1_filtered = sustainability_filters(c1_scen, ar6_scen, filter_flag=7)
+    c1_filtered = sustainability_filters(c1_scen, ar6_scen)
 
     ar6_filled_em = fill_EIP_emissions(ar6_scen, c1_scen)
     net_co2_df = ar6_filled_em.loc[
