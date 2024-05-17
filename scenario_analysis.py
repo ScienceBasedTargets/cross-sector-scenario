@@ -5,7 +5,7 @@ import numpy
 import pandas
 
 # directory containing scenario data
-_PROJ_DIR = "C:/Users/ginger.kowal/Documents/Scenario review"
+_PROJ_DIR = "C:/Users/Ginger.Kowal.CORPCDP/Documents/Scenario review"
 
 # output directory
 _OUT_DIR = os.path.join(
@@ -374,55 +374,114 @@ def summarize_c1_key_var():
         os.path.join(_OUT_DIR, 'AR6_C1_key_var_summary.csv'))
 
 
-def cross_sector_benchmarks():
-    """Calculate cross sector benchmarks from AR6 and key hybrid scenarios."""
-    # Median of filtered scenarios from AR6 database
+def summarize_CO2():
+    """Summarize gross EIP CO2 including harmonization with 2022 emissions."""
+    # net EIP CO2 emissions, unharmonized
     ar6_key, ar6_scen = read_ar6_data()
     year_col = [col for col in ar6_scen if col.startswith('2')]
     c1_scen = ar6_key.loc[ar6_key['Category'] == 'C1']['scen_id']
-    c1_filtered = sustainability_filters(c1_scen, ar6_scen)
+    c1_filtered = sustainability_filters(c1_scen, ar6_scen, filter_flag=7)
 
-    # fill EIP emissions for all C1 scenarios in the database
     ar6_filled_em = fill_EIP_emissions(ar6_scen, c1_scen)
-    ar6_gross_em = calc_gross_eip_co2(ar6_filled_em, year_col)
+    net_co2_df = ar6_filled_em.loc[
+        (ar6_filled_em['Variable'] ==
+            'Emissions|CO2|Energy and Industrial Processes') &
+        (ar6_filled_em['scen_id'].isin(c1_filtered))]
+    net_co2_df.replace(0, numpy.nan, inplace=True)
 
-    # calculate median gross emissions for scenarios in filtered sets
-    summary_cols = ['2020', '2030', '2040', '2050', 'Variable']
-    num_cols = ['2020', '2030', '2040', '2050']
-    med_co2_filtered_c1 = ar6_gross_em.loc[
-        ar6_gross_em['scen_id'].isin(c1_filtered)][summary_cols].groupby(
-            'Variable').quantile(q=0.5)
-    med_co2_filtered_c1.reset_index(inplace=True)
-    med_co2_filtered_c1['Source'] = 'filtered C1'
+    # gross EIP CO2 emissions (unharmonized)
+    gross_em = calc_gross_eip_co2(ar6_filled_em, year_col)
+    gross_co2_df = gross_em.loc[
+        (gross_em['Variable'] ==
+            'Emissions|CO2|Energy and Industrial Processes|Gross') &
+        (gross_em['scen_id'].isin(c1_filtered))]
+    gross_co2_df.replace(0, numpy.nan, inplace=True)
 
-    # gross EIP CO2 emissions in key external scenarios
-    key_scenario_df = pandas.read_csv(
-        os.path.join(_PROJ_DIR, 'gross_eip_co2_emissions_focal_scen.csv'))
+    # harmonize net CO2 emissions with historical
+    hist_path = os.path.join(
+        _PROJ_DIR, 'aneris_inputs', 'eip_co2_emissions_historical.csv')
+    regions_path = os.path.join(
+        _PROJ_DIR, 'aneris_inputs', 'regions_regions_sectors.csv')
+    config_path = os.path.join(
+        _PROJ_DIR, 'aneris_inputs', 'aneris_regions_sectors.yaml')
+    aneris_dict = harmonize_to_historical(
+        net_co2_df, hist_path, regions_path, config_path)
 
-    # select subset of focal scenarios
-    focal_scen = ['NZE', 'CWF']
-    focal_df = key_scenario_df.loc[key_scenario_df['Source'].isin(focal_scen)]
+    # calculate gross EIP CO2 emissions from harmonized net emissions
+    harm_df = aneris_dict['harmonized']
+    harm_net_co2_df = harm_df.loc[
+        harm_df['Variable'] == 'p|Emissions|CO2|Harmonized-DB']
+    harm_net_co2_df['scen_id'] = harm_net_co2_df['Scenario']
+    harm_net_co2_df['Variable'] = (
+        'Emissions|CO2|Energy and Industrial Processes')
+    non_net_df = ar6_filled_em.loc[
+        (ar6_filled_em['Variable'] !=
+            'Emissions|CO2|Energy and Industrial Processes') &
+        (ar6_filled_em['scen_id'].isin(harm_df['Scenario'].unique()))]
+    non_net_df.replace(0, numpy.nan, inplace=True)
+    comb_df = pandas.concat([harm_net_co2_df, non_net_df])
+    gross_harm_co2_df = calc_gross_eip_co2(comb_df, year_col, fill_df=True)
+    gross_harm_co2_df['Variable'] = (
+        'Emissions|CO2|Energy and Industrial Processes|Gross|Harmonized-DB')
+    harm_net_co2_df['Variable'] = (
+        'Emissions|CO2|Energy and Industrial Processes|Harmonized-DB')
 
-    scen_df = pandas.concat([med_co2_filtered_c1, focal_df])
-    scen_df['percch_2030'] = (
-        scen_df['2030'] - scen_df['2020']) / scen_df['2020']
-    scen_df['percch_2040'] = (
-        scen_df['2040'] - scen_df['2020']) / scen_df['2020']
-    scen_df['percch_2050'] = (
-        scen_df['2050'] - scen_df['2020']) / scen_df['2020']
-    scen_df['Variable'] = 'Gross fossil CO2'
+    # gross EIP CO2 from IEA Net Zero Emissions by 2050 scenario
+    iea_path = os.path.join(
+        _PROJ_DIR, 'IEA', 'NZE_2023', 'gross_eip_co2_emissions.csv')
+    iea_co2_df = pandas.read_csv(iea_path)
+    iea_co2_df['scen_id'] = iea_co2_df['Source']
+    iea_co2_df['Variable'] = (
+        'Emissions|CO2|Energy and Industrial Processes|Gross')
 
-    # estimate gross EIP CO2 emissions in 2030, 2040, 2050 from average
-    # % change among included scenarios
-    co2_df = pandas.DataFrame({
-        '2020': [_2020_CO2],
-        '2030': [_2020_CO2 + (_2020_CO2 * scen_df['percch_2030'].mean())],
-        '2040': [_2020_CO2 + (_2020_CO2 * scen_df['percch_2040'].mean())],
-        '2050': [_2020_CO2 + (_2020_CO2 * scen_df['percch_2050'].mean())],
-        })
-    co2_df['Variable'] = 'Gross fossil CO2'
+    # add IEA to unharmonized and harmonized emissions df
+    em_df = pandas.concat(
+        [net_co2_df, harm_net_co2_df, gross_co2_df, gross_harm_co2_df,
+        iea_co2_df])
+    summary_cols = [
+        str(idx) for idx in list(range(2020, 2051))] + ['Variable', 'scen_id']
+    em_df = em_df[summary_cols]
+    em_df.to_csv(os.path.join(_OUT_DIR, "combined_em_df_budg2050.csv"))
+
+
+def cross_sector_benchmarks():
+    """Calculate cross sector benchmarks from AR6 and IEA NZE scenarios."""
+    # Median of filtered scenarios from AR6 database
+    # This performs calculation of the scenario set for gross fossil
+    # CO2 emissions, including harmonization with historical emissions within
+    # a budget constraint calculated over 2022-2050.
+    # The output is written to file at the path
+    # os.path.join(_OUT_DIR, "combined_em_df_budg2050.csv")
+    # summarize_CO2()
+
+    # Gross fossil CO2 (output from above)
+    harm_df = pandas.read_csv(
+        os.path.join(_OUT_DIR, "combined_em_df_budg2050.csv"))
+
+    # fill missing data via interpolation
+    year_col = [col for col in harm_df if col.startswith('2')]
+    harm_df.loc[
+        harm_df['Variable'] ==
+        'Emissions|CO2|Energy and Industrial Processes|Gross|Harmonized-DB',
+        '2020'] = _2020_CO2
+    harm_df['2021'] = numpy.nan
+    gr_co2_df = harm_df.loc[
+        (harm_df['Variable'] ==
+        'Emissions|CO2|Energy and Industrial Processes|Gross|Harmonized-DB') |
+        (harm_df['scen_id'] == 'NZE 2023')]
+    gr_co2_df.replace(0, numpy.nan, inplace=True)
+    gr_co2_df_interp = gr_co2_df[year_col].interpolate(axis=1)
+
+    # median of harmonized scenarios, plus NZE
+    gr_co2_med_ser = gr_co2_df_interp.quantile(q=0.5)
+    gr_co2_med = pandas.DataFrame(gr_co2_med_ser).transpose()
 
     # summarize single-gas pathways for non-CO2 GHGs
+    ar6_key, ar6_scen = read_ar6_data()
+    year_col = [col for col in ar6_scen if col.startswith('2')]
+    num_cols = ['2020', '2030', '2040', '2050']
+    c1_scen = ar6_key.loc[ar6_key['Category'] == 'C1']['scen_id']
+
     eip_n2o_df = calc_eip_n2o(ar6_scen, year_col)
     eip_n2o_df.reset_index(inplace=True)
     med_c1_n2o = eip_n2o_df.loc[
@@ -459,8 +518,9 @@ def cross_sector_benchmarks():
     non_co2_df['Variable'] = non_co2_df.index
     non_co2_df['Source'] = 'Cross sector benchmark'
 
+    co2_df = gr_co2_med[num_cols]
     co2e_df = pandas.concat([co2_df, non_co2_df])
-    sum_ser = co2e_df[['2020', '2030', '2040', '2050']].sum()
+    sum_ser = co2e_df[num_cols].sum()
     sum_df = pandas.DataFrame(sum_ser).transpose()
     sum_df['Variable'] = 'Gross fossil CO2e'
     sum_df['Source'] = 'Cross sector benchmark'
@@ -468,9 +528,7 @@ def cross_sector_benchmarks():
     # summary for inclusion in the report
     co2_df['Variable'] = 'Gross fossil CO2'
     co2_df['Source'] = 'Cross sector benchmark'
-    summary_df = pandas.concat([
-        scen_df[['Variable', 'Source', '2020', '2030', '2040', '2050']],
-        co2_df, sum_df, non_co2_df])
+    summary_df = pandas.concat([co2_df, sum_df, non_co2_df])
     summary_df['percch_2030'] = (
         summary_df['2030'] - summary_df['2020']) / summary_df['2020']
     summary_df['percch_2040'] = (
@@ -478,7 +536,7 @@ def cross_sector_benchmarks():
     summary_df['percch_2050'] = (
         summary_df['2050'] - summary_df['2020']) / summary_df['2020']
     summary_df.to_csv(
-        os.path.join(_OUT_DIR, '20230920_cs_pathway_summary.csv'),
+        os.path.join(_OUT_DIR, '20240511_cs_benchmark_summary.csv'),
         index=False)
 
 
